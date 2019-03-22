@@ -5,13 +5,23 @@ from pprint import pprint
 class RaisedPlayer(BasePokerPlayer):
   # name of our bot, I think hardcode cause looking at the round_state data there's no other way to identify whose action is who
   name = "FT2" 
-  current_round = 0
+  round = 0 # current_round
   seat = 0
   small_blind = True
 
+  # opponents properties for classification (loose/tight, passive/aggressive)
+  # loose if gameplay/current_round (GP%) >= 28%
+  # passive if raise_count - call_count <= 0
+  # 4 stages: preflop, flop, turn, river
+  games_play = 0 # games where opponent did not fold i.e. we fold or both see to river
+  raise_count = 0 # number of hands raised of opponent
+  call_count = 0  
+
   def declare_action(self, valid_actions, hole_card, round_state):
-    # logFile = open('logfile.txt', 'a')
-    # pprint(round_state, logFile)
+    logFile = open('logfile.txt', 'a')
+    pprint(round_state, logFile)
+
+    self.new_round(round_state)
 
     for i in valid_actions:
         if i["action"] == "raise":
@@ -40,17 +50,17 @@ class RaisedPlayer(BasePokerPlayer):
     return round_state['pot']['main']['amount']
 
   # new round check, to update seat position, do every declare_action call
-  def end_round(self, round_state): 
-    if round != round_state['round_count']:
-      round = round_state['round_count']
-      seat = get_seat_position(round_state)
-      if small_blind_pos == seat:
-        small_blind = True
+  def new_round(self, round_state): 
+    if self.round != round_state['round_count']:
+      self.round = round_state['round_count']
+      self.seat = self.get_seat_position(round_state)
+      if round_state['small_blind_pos'] == self.seat:
+        self.small_blind = True
       else:
-        small_blind = False
+        self.small_blind = False
 
   def get_seat_position(self, round_state):
-    if round_state['seats'][0]['name'] == name:
+    if round_state['seats'][0]['name'] == self.name:
       return 0
     else:
       return 1
