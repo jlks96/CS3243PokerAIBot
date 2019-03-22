@@ -41,7 +41,7 @@ class RaisedPlayer(BasePokerPlayer):
 
   # new round check, to update seat position, do every declare_action call
   def end_round(self, round_state): 
-    if round != round_state['round_count']
+    if round != round_state['round_count']:
       round = round_state['round_count']
       seat = get_seat_position(round_state)
       if small_blind_pos == seat:
