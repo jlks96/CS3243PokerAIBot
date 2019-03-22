@@ -49,16 +49,13 @@ class RandomPlayer(BasePokerPlayer):
     pass
 
   def receive_game_update_message(self, action, round_state):
-    if action['player_uuid'] == self.player_uuid:
-      if self.prev_state == {}:  # at start of the game
-        self.curr_state = {}  # need to update state
-        self.prev_state = self.curr_state
-        self.prev_action = action['action']
-      else:
-        self.curr_state = {}  # need to update state
+    if action['player_uuid'] != self.player_uuid:  # opponent acts, we update our states
+      self.curr_state = {}  # need to update current state
+      if self.prev_state != {}:  # in the middle of the game
         self.remember_action(self.prev_state, self.prev_action, self.in_game_reward, self.curr_state, 0)
-        self.prev_state = self.curr_state
-        self.prev_action = action['action']
+      self.prev_state = self.curr_state
+    else: # we act, we update our action
+      self.prev_action = action['action']
 
   def receive_round_result_message(self, winners, hand_info, round_state):
     if winners['uuid'] == self.uuid:
