@@ -10,13 +10,11 @@ import pprint
 
 class RandomPlayer(BasePokerPlayer):
 
-  player_uuid = ""  # need to update uuid of this player in first round
-
-  # values needed to DQN
-  curr_state = {}
-  prev_state = {}
-  prev_action = ""
+  # information needed for DQN
+  states = {}
+  actions = {}
   in_game_reward = 0
+  final_reward = 0
 
   def declare_action(self, valid_actions, hole_card, round_state):
     # valid_actions format => [raise_action_pp = pprint.PrettyPrinter(indent=2)
@@ -39,7 +37,6 @@ class RandomPlayer(BasePokerPlayer):
     return action  # action returned here is sent to the poker engine
 
   def receive_game_start_message(self, game_info):
-    # update own uuid
     pass
 
   def receive_round_start_message(self, round_count, hole_card, seats):
@@ -49,21 +46,10 @@ class RandomPlayer(BasePokerPlayer):
     pass
 
   def receive_game_update_message(self, action, round_state):
-    if action['player_uuid'] != self.player_uuid:  # opponent acts, we update our states
-      self.curr_state = {}  # need to update current state
-      if self.prev_state != {}:  # in the middle of the game
-        self.remember_action(self.prev_state, self.prev_action, self.in_game_reward, self.curr_state, 0)
-      self.prev_state = self.curr_state
-    else: # we act, we update our action
-      self.prev_action = action['action']
+    pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
-    if winners['uuid'] == self.uuid:
-      self.remember_action(self.prev_state, self.prev_action, round_state['pot']['main']['amount'],
-                           self.curr_state, 1)
-    else:
-      self.remember_action(self.prev_state, self.prev_action, -round_state['pot']['main']['amount'],
-                           self.curr_state, 1)
+    pass
 
 
   # -----------------DQN MODEL------------------ #
@@ -94,8 +80,12 @@ class RandomPlayer(BasePokerPlayer):
     model.compile(loss=self._huber_loss, optimizer=Adam(lr=self.learning_rate))
     return model
 
-  def remember_action(self, state, action, reward, next_state, done):
-    self.memory.append((state, action, reward, next_state, done))
+
+  def remember_examples(self):
+    for i in range(len(self.actions)-1):
+      self.memory.append((self.states[i], self.actions[i], self.in_game_reward, self.states[i + 1], 0))
+    self.memory.append((self.states[len(self.actions)-1], self.actions[len(self.actions)-1],
+                        self.final_reward, self.states[len(self.actions)-1], 1))
 
   def decide_action(self, state):
     if np.random.rand() <= self.epsilon:
