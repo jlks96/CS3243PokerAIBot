@@ -1,39 +1,22 @@
 from pypokerengine.players import BasePokerPlayer
 import random as rand
 import numpy as np
+import tensorflow as tf
+from numpy import array
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
 from keras import backend as K
-import tensorflow as tf
 import pprint
 
 class RandomPlayer(BasePokerPlayer):
 
-  # information needed for DQN
-  states = {}
-  actions = {}
-  in_game_reward = 0
-  final_reward = 0
-
   def declare_action(self, valid_actions, hole_card, round_state):
-    # valid_actions format => [raise_action_pp = pprint.PrettyPrinter(indent=2)
-    #pp = pprint.PrettyPrinter(indent=2)
-    #print("------------ROUND_STATE(RANDOM)--------")
-    #pp.pprint(round_state)
-    #print("------------HOLE_CARD----------")
-    #pp.pprint(hole_card)
-    #print("------------VALID_ACTIONS----------")
-    #pp.pprint(valid_actions)
-    #print("-------------------------------")
-    r = rand.random()
-    if r <= 0.5:
-      call_action_info = valid_actions[1]
-    elif r <= 0.9 and len(valid_actions ) == 3:
-      call_action_info = valid_actions[2]
-    else:
-      call_action_info = valid_actions[0]
-    action = call_action_info["action"]
+    state = array([])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
+    state = np.reshape(state, [1, self.state_size])
+    action = valid_actions[self.predict_action(state)]
+    self.states.append(state)
+    self.actions.append(action)
     return action  # action returned here is sent to the poker engine
 
   def receive_game_start_message(self, game_info):
@@ -49,21 +32,25 @@ class RandomPlayer(BasePokerPlayer):
     pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
-    pass
-
+    self._remember_examples()  # at the end of each round, record all the training examples
 
   # -----------------DQN MODEL------------------ #
   def __init__(self):
     BasePokerPlayer.__init__(self)
+    # --------------INFO FOR DQN---------------- #
     self.state_size = 5  # number of features
     self.action_size = 3  # number of actions
-    self.memory = list()  # stores every step of the game
+    self.memory = []  # stores every step of the game
     self.gamma = 0.95  # discount rate
     self.epsilon = 1.0  # exploration rate
     self.epsilon_min = 0.01
     self.epsilon_decay = 0.99
     self.learning_rate = 0.001
     self.model = self._build_model()
+    self.states = []
+    self.actions = []
+    self.in_game_reward = 0
+    self.final_reward = 0
 
   def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
     error = y_true - y_pred
@@ -80,16 +67,18 @@ class RandomPlayer(BasePokerPlayer):
     model.compile(loss=self._huber_loss, optimizer=Adam(lr=self.learning_rate))
     return model
 
-
-  def remember_examples(self):
+  def _remember_examples(self):
     for i in range(len(self.actions)-1):
       self.memory.append((self.states[i], self.actions[i], self.in_game_reward, self.states[i + 1], 0))
     self.memory.append((self.states[len(self.actions)-1], self.actions[len(self.actions)-1],
                         self.final_reward, self.states[len(self.actions)-1], 1))
+    self.states = []  # reset for next round
+    self.actions = []
+    self.final_reward = 0
 
-  def decide_action(self, state):
+  def predict_action(self, state):
     if np.random.rand() <= self.epsilon:
-      return rand.randrange(self.action_size)
+      return rand.randrange(self.action_size)  # randomness
     act_values = self.model.predict(state)
     return np.argmax(act_values[0])  # returns action
 
