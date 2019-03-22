@@ -1,7 +1,9 @@
 from pypokerengine.players import BasePokerPlayer
 from pypokerengine.engine.hand_evaluator import HandEvaluator
+from pypokerengine.engine.card import Card
 import random as rand
 import pprint
+import itertools.combination as combination
 
 class RandomPlayer(BasePokerPlayer):
 
@@ -35,10 +37,33 @@ class RandomPlayer(BasePokerPlayer):
     return p_win/len(opp_possible_hole_cards) // SHOULD I DO LAPLACE TO PREVENT N/0 SITUATION?
 
   def generate_cards(hole_card, community_card):
-    return []
-    
+    original_deck_set = range(1,53)
+    hole_card_set = set([card.to_id for card in hole_card])
+    community_card_set = set([card.to_id for card in community_card])
+    revealed_set = hole_card_set + community_card_set
+    cheat_deck = list(original_deck_set - revealed_set) // TO TEST!!!!
+    opp_hole_card = []
+    while(len(community_card) < 5):
+      idx = rand.choice(cheat_deck)
+      new_card = Card.from_id(idx)
+      community_card.append(new_card)
+      cheat_deck.remove(idx)
+    while(len(opp_hole_card) < 2):
+      idx = rand.choice(cheat_deck)
+      new_card = Card.from_id(idx)
+      opp_hole_card.append(new_card)
+      cheat_deck.remove(idx)
+    return community_card, opp_hole_card 
+
   def get_all_possible_opp_hole(hole_card, community_card):
-    return []
+    original_deck_set = range(1,53)
+    hole_card_set = set([card.to_id for card in hole_card])
+    community_card_set = set([card.to_id for card in community_card])
+    revealed_set = hole_card_set + community_card_set
+    cheat_deck = list(original_deck_set - revealed_set) // TO TEST!!!!
+    opp_possible_hole_card_id= combination(cheat_deck, 2)
+    opp_possible_hole_cards = [[Card.from_id(id_pair[0]), Card.from_id(id_pair[1])] for id_pair in opp_possible_hole_card_id]
+    return opp_possible_hole_cards
 
   def declare_action(self, valid_actions, hole_card, round_state):
     # valid_actions format => [raise_action_pp = pprint.PrettyPrinter(indent=2)
