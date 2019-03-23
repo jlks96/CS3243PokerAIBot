@@ -32,6 +32,10 @@ class RandomPlayer(BasePokerPlayer):
     pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
+    if winners['uuid'] == self.uuid:
+      self.final_reward = round_state['pot']['main']['amount']
+    else:
+      self.final_reward = -round_state['pot']['main']['amount']
     self._remember_examples()  # at the end of each round, record all the training examples
 
   # -----------------DQN MODEL------------------ #
@@ -51,6 +55,7 @@ class RandomPlayer(BasePokerPlayer):
     self.actions = []
     self.in_game_reward = 0
     self.final_reward = 0
+    self.uuid = ""
 
   def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
     error = y_true - y_pred
