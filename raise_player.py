@@ -39,10 +39,11 @@ class RaisedPlayer(BasePokerPlayer):
     return action # action returned here is sent to the poker engine
 
   def receive_game_start_message(self, game_info):
-    self.first_action = True
+    pass
 
   def receive_round_start_message(self, round_count, hole_card, seats):
     self.round = round_count
+    self.first_action = True
     
 
   def receive_street_start_message(self, street, round_state):
