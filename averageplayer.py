@@ -6,7 +6,7 @@ import random as rand
 import pprint
 
 
-class RandomPlayer(BasePokerPlayer):
+class AveragePlayer(BasePokerPlayer):
 
   def __init__(self):
     with open('file.txt') as f:
@@ -43,7 +43,7 @@ class RandomPlayer(BasePokerPlayer):
 
   def EHS_3_4(self, hole_card, community_card):
     p_win = 0
-    for iter in range(1000):
+    for iter in range(100):
       community_card_new, opp_hole_card_new = self.generate_cards(hole_card, community_card)
       hole_card_new = [Card.from_str(card) for card in hole_card]
       p_score = HandEvaluator.eval_hand(hole_card_new, community_card_new)
@@ -112,13 +112,13 @@ class RandomPlayer(BasePokerPlayer):
     #print("------------VALID_ACTIONS----------")
     #pp.pprint(valid_actions)
     #print("-------------------------------")
-    r = rand.random()
-    if r <= 0.5:
-      call_action_info = valid_actions[1]
-    elif r<= 0.9 and len(valid_actions ) == 3:
+    r = self.EHS(hole_card, round_state['community_card'])
+    if r <= 0.05:
+      call_action_info = valid_actions[0]
+    elif r > 0.5 and len(valid_actions ) == 3:
       call_action_info = valid_actions[2]
     else:
-      call_action_info = valid_actions[0]
+      call_action_info = valid_actions[1]
     action = call_action_info["action"]
     return action  # action returned here is sent to the poker engine
 
@@ -138,4 +138,4 @@ class RandomPlayer(BasePokerPlayer):
     pass
 
 def setup_ai():
-  return RandomPlayer()
+  return AveragePlayer()
