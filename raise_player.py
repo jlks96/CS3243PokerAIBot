@@ -10,6 +10,8 @@ class RaisedPlayer(BasePokerPlayer):
       self.small_blind = True
       self.first_action = True # of a new round, occur in preflop, to determine who's small_blind
 
+      self.unanswered_raise = False # from opponent
+
       # opponents properties for classification (loose/tight, passive/aggressive)
       # loose if (round - folded)/round (GP%) >= 28%
       # passive if raise_count - call_count <= 0
@@ -60,6 +62,7 @@ class RaisedPlayer(BasePokerPlayer):
       opp_action = action['action']
       if opp_action == 'raise':
         self.opp_raise += 1
+        self.unanswered_raise = True
       if opp_action == 'call':
         self.opp_call += 1
       if opp_action == 'fold':
@@ -85,6 +88,15 @@ class RaisedPlayer(BasePokerPlayer):
       'tightness': tightness,
       'aggressiveness': aggressiveness
     }
+
+  def call_or_check(self):
+    if self.unanswered_raise:
+      # any action including call will answer the raise thus flip it here
+      self.unanswered_raise = False
+      return 'call'
+    else:
+      # no opponent unanswered raise so a call would cost 0 -> effectively a check
+      return 'check'
 
   # Utility functions to get observable environment var
   def get_pot(self, round_state):
