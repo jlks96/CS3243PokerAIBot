@@ -110,7 +110,7 @@ class RandomPlayer(BasePokerPlayer):
         if np.random.rand() <= self.epsilon:
             return rand.randrange(len(possible_action_indices))  # randomness
         act_values = self.model.predict(state)
-        sorted_action_indices = np.argsort(act_values[0])
+        sorted_action_indices = np.argsort(-(act_values[0]))
         for i in sorted_action_indices:
             if i in possible_action_indices:
                 return i
