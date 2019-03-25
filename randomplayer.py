@@ -49,7 +49,7 @@ class RandomPlayer(BasePokerPlayer):
             if s['uuid'] == self.uuid:
                 self.final_stack = s['stack']
                 break
-        if winners['uuid'] == self.uuid:
+        if winners[0]['uuid'] == self.uuid:
             self.final_reward = round_state['pot']['main']['amount']
         else:
             self.final_reward = self.final_stack - self.beginning_stack
