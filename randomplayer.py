@@ -13,18 +13,12 @@ import pprint
 class RandomPlayer(BasePokerPlayer):
 
     def declare_action(self, valid_actions, hole_card, round_state):
-        state = array([])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
+        state = array([0, 0, 0, 0, 0])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
         state = np.reshape(state, [1, self.state_size])
-        # eed to map actions to indices, 0 - fold, 1 - call, 2 - raise
-        possible_action_indices = set()
-        for a in valid_actions:
-            if a['action'] == 'fold':
-                possible_action_indices.add(0)
-            if a['action'] == 'call':
-                possible_action_indices.add(1)
-            if a['action'] == 'raise':
-                possible_action_indices.add(2)
-        action_index = self.predict_action(state, possible_action_indices)
+        # map actions to indices, 0 - fold, 1 - call, 2 - raise
+        action_index = self.predict_action(state)
+        if action_index == 2 and len(valid_actions) < 3:
+            action_index = 1
         self.states.append(state)
         self.actions.append(action_index)
         if action_index == 0:
@@ -106,14 +100,11 @@ class RandomPlayer(BasePokerPlayer):
         self.actions = []
         self.final_reward = 0
 
-    def predict_action(self, state, possible_action_indices):
-        if np.random.rand() <= self.epsilon:
-            return rand.randrange(len(possible_action_indices))  # randomness
+    def predict_action(self, state):
+        if np.random.rand() <= self.epsilon: # randomness
+            return rand.randrange(self.action_size)
         act_values = self.model.predict(state)
-        sorted_action_indices = np.argsort(-(act_values[0]))
-        for i in sorted_action_indices:
-            if i in possible_action_indices:
-                return i
+        return np.argmax(act_values[0])  # returns action
 
     def exp_replay(self, batch_size):
         minibatch = rand.sample(self.memory, batch_size)
