@@ -1,5 +1,5 @@
 from pypokerengine.api.game import setup_config, start_poker
-from smartplayer import SmartPlayer
+from randomplayer import randomPlayer
 from raise_player import RaisedPlayer
 
 num_game = 500
