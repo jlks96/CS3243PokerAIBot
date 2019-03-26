@@ -67,6 +67,7 @@ class RandomPlayer(BasePokerPlayer):
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.99
         self.learning_rate = 0.001
+        self.batch_size = 32
         self.model = self._build_model()
         self.states = []
         self.actions = []
@@ -106,8 +107,8 @@ class RandomPlayer(BasePokerPlayer):
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])  # returns action
 
-    def exp_replay(self, batch_size):
-        minibatch = rand.sample(self.memory, batch_size)
+    def exp_replay(self):
+        minibatch = rand.sample(self.memory, self.batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
             if not done:
