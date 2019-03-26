@@ -7,7 +7,7 @@ from raise_player import RaisedPlayer
 
 
 # Default option
-num_game = 500
+num_game = 10000
 num_round = 1000
 initial_stack = 10000
 
@@ -19,13 +19,13 @@ required_win_pct = 70
 
 
 def usage():
-    print "usage: " + sys.argv[0] + " -n no_of_games -r max_rounds"
+    print "usage: " + sys.argv[0] + " -n no_of_games -r max_rounds -i initial_stack -s small_blind_amount"
 
 
 def initiate_game(config):
     win_count = 0;
     for game in range(1, 101):
-        print("Game number: ", game)
+        print "Game number: " + str(game)
         game_result = start_poker(config, verbose = 0)
         # agent1_pot = agent1_pot + game_result['players'][0]['stack']
         # agent2_pot = agent2_pot + game_result['players'][1]['stack']
@@ -50,27 +50,30 @@ except getopt.GetoptError:
     
 for o, a in opts:
     if o == '-n': # number of games
-        num_game = a
+        num_game = int(a)
     elif o == 'r': # max round for each game
-        num_round = a
+        num_round = int(a)
     elif o == 'i': # initial stack
-        initial_stack = a
+        initial_stack = int(a)
     elif o == 's': # small blind
-        small_blind = a
+        small_blind = int(a)
     else:
         assert False, "unhandled option"
 
 randomPlayer = RandomPlayer()
 raisedPlayer = RaisedPlayer()
 
-config = set_config(randomplayer, raisedPlayer)
+config = set_config(randomPlayer, raisedPlayer)
+print 'Start training with: \nNo. of games: %d\nMax rounds: %d\nInitial stack: %d\nSmall blind amount: %d' % (num_game, num_round, initial_stack, small_blind)
 
 for game_batch in range(0, num_game/100):
     # Games are played in batch of 100
-    win_pct = initiate_game(100, config)
+    win_pct = initiate_game(config)
     # When win % exceeds required %, swap player
     if win_pct > required_win_pct:
+    	print 'Your player outplays the default player'
         config = set_config(raisedPlayer, raisedPlayer)
     raisedPlayer.exp_replay()
-
-# raisedPlayer.save("./save/dqn_model.h5")
+	raisedPlayer.save("./save/dqn_model.h5")
+	if game_batch > 0:
+		agent.load("./save/dqn_model.h5")
