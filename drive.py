@@ -76,4 +76,4 @@ for game_batch in range(0, num_game/100):
     raisedPlayer.exp_replay()
 	raisedPlayer.save("./save/dqn_model.h5")
 	if game_batch > 0:
-		agent.load("./save/dqn_model.h5")
+		raisedPlayer.load("./save/dqn_model.h5")
