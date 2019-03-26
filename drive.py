@@ -2,7 +2,7 @@ import sys
 import getopt
 
 from pypokerengine.api.game import setup_config, start_poker
-from raise_player import RaisePlayer
+from raise_player import RaisedPlayer
 from smartplayer import SmartPlayer
 
 
@@ -60,7 +60,7 @@ for o, a in opts:
     else:
         assert False, "unhandled option"
 
-raiseplayer = RaisePlayer()
+raiseplayer = RaisedPlayer()
 smartPlayer = SmartPlayer()
 
 config = set_config(raiseplayer, smartPlayer)
@@ -74,6 +74,6 @@ for game_batch in range(0, num_game/100):
     	print 'Your player outplays the default player'
         config = set_config(smartPlayer, smartPlayer)
     smartPlayer.exp_replay()
-	smartPlayer.save("./save/dqn_model.h5")
-	if game_batch > 0:
+    smartPlayer.save("./save/dqn_model.h5")
+    if game_batch > 0:
 		smartPlayer.load("./save/dqn_model.h5")

@@ -13,7 +13,7 @@ from keras import backend as K
 import pprint
 
 
-class RandomPlayer(BasePokerPlayer):
+class SmartPlayer(BasePokerPlayer):
 
     def __init__(self):
         BasePokerPlayer.__init__(self)
