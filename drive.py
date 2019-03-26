@@ -2,8 +2,8 @@ import sys
 import getopt
 
 from pypokerengine.api.game import setup_config, start_poker
-from randomplayer import RandomPlayer
-from raise_player import RaisedPlayer
+from raise_player import RaisePlayer
+from smartplayer import SmartPlayer
 
 
 # Default option
@@ -31,7 +31,7 @@ def initiate_game(config):
         # agent2_pot = agent2_pot + game_result['players'][1]['stack']
         if game_result['players'][0]['stack'] > game_result['players'][1]['stack']:
             win_count += 1
-        # randomPlayer.exp_replay()
+        # raiseplayer.exp_replay()
     return win_count
 
 
@@ -53,17 +53,17 @@ for o, a in opts:
         num_game = int(a)
     elif o == 'r': # max round for each game
         num_round = int(a)
-    elif o == 'i': # initial stack
+    elif o == 'i': # initial stackss
         initial_stack = int(a)
     elif o == 's': # small blind
         small_blind = int(a)
     else:
         assert False, "unhandled option"
 
-randomPlayer = RandomPlayer()
-raisedPlayer = RaisedPlayer()
+raiseplayer = RaisePlayer()
+smartPlayer = SmartPlayer()
 
-config = set_config(randomPlayer, raisedPlayer)
+config = set_config(raiseplayer, smartPlayer)
 print 'Start training with: \nNo. of games: %d\nMax rounds: %d\nInitial stack: %d\nSmall blind amount: %d' % (num_game, num_round, initial_stack, small_blind)
 
 for game_batch in range(0, num_game/100):
@@ -72,8 +72,8 @@ for game_batch in range(0, num_game/100):
     # When win % exceeds required %, swap player
     if win_pct > required_win_pct:
     	print 'Your player outplays the default player'
-        config = set_config(raisedPlayer, raisedPlayer)
-    raisedPlayer.exp_replay()
-	raisedPlayer.save("./save/dqn_model.h5")
+        config = set_config(smartPlayer, smartPlayer)
+    smartPlayer.exp_replay()
+	smartPlayer.save("./save/dqn_model.h5")
 	if game_batch > 0:
-		raisedPlayer.load("./save/dqn_model.h5")
+		smartPlayer.load("./save/dqn_model.h5")

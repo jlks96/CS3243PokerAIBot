@@ -40,4 +40,4 @@ class RandomPlayer(BasePokerPlayer):
     pass
 
 def setup_ai():
-  return RandomPlayer()
+  return RaisedPlayer()
