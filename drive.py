@@ -31,7 +31,6 @@ def initiate_game(config):
         # agent2_pot = agent2_pot + game_result['players'][1]['stack']
         if game_result['players'][0]['stack'] > game_result['players'][1]['stack']:
             win_count += 1
-        # raiseplayer.exp_replay()
     return win_count
 
 
@@ -74,6 +73,6 @@ for game_batch in range(0, num_game/100):
     	print 'Your player outplays the default player'
         config = set_config(smartPlayer, smartPlayer)
     smartPlayer.exp_replay()
-    smartPlayer.save("./save/dqn_model.h5")
+    smartPlayer.save("dqn_model.h5")
     if game_batch > 0:
-		smartPlayer.load("./save/dqn_model.h5")
+		smartPlayer.load("dqn_model.h5")
