@@ -44,6 +44,7 @@ class SmartPlayer(BasePokerPlayer):
         self.small_blind = True
         self.first_action = True # of a new round, occur in preflop, to determine who's small_blind
         self.unanswered_raise = False # from opponent
+        self.current_street = 0
 
         # opponents properties for classification (loose/tight, passive/aggressive)
         # loose if (round - folded)/round (GP%) >= 28%
@@ -60,7 +61,18 @@ class SmartPlayer(BasePokerPlayer):
             self.uuid = round_state['action_histories']['preflop'][0]['uuid']
             self.first_action = False
 
+        # input space size 4 = {1,2,3,4} corresponds to { tightness: True/False, 'aggressiveness' =  True/False }
         opp_class = self.update_opponent_classifification()
+        # pot, input space = int 0 < x <= 1000
+        pot = self.get_pot(round_state)
+        # our current stack, input space = int 0 < x <= 1000
+        stack = self.get_stack(round_state)
+        # progress, input space size 4 = {1,2,3,4} corresponds to { 'preflop', 'flop', 'turn', 'river' }
+        # there are also 'showdown' & 'finished' but declare_action will not get call during those
+        progress = self.current_street
+        
+        # TODO: which EHS function to call ??
+        
 
         #----------PREDICT ACTION---------#
         state = array([0, 0, 0, 0, 0])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
@@ -84,12 +96,13 @@ class SmartPlayer(BasePokerPlayer):
     def receive_round_start_message(self, round_count, hole_card, seats):
         self.round = round_count
         self.first_action = True
+        self.current_street = 0
         for s in seats:
             if s['uuid'] == self.uuid:
                 self.beginning_stack = s['stack']
 
     def receive_street_start_message(self, street, round_state):
-        pass
+        self.current_street += 1
 
     def receive_game_update_message(self, action, round_state):
         if self.first_action: # got 1st game update before declare 1st action -> opponent small_blind
@@ -267,10 +280,15 @@ class SmartPlayer(BasePokerPlayer):
         if self.opp_raise - self.opp_call <= 0:
             aggressiveness = False
 
-        return {
-            'tightness': tightness,
-            'aggressiveness': aggressiveness
-        }
+        if tightness and aggressiveness:
+            return 4
+        elif tightness and (not aggressiveness):
+            return 3
+        elif (not tightness) and aggressiveness:
+            return 2
+        else:
+            return 1
+
 
     def call_or_check(self):
         if self.unanswered_raise:
