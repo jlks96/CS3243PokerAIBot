@@ -67,6 +67,7 @@ class SmartPlayer(BasePokerPlayer):
         pot = self.get_pot(round_state)
         # our current stack, input space = int 0 < x <= 1000
         stack = self.get_stack(round_state)
+        gain_ratio = (self.beginning_stack - stack) / float(pot)
         # progress, input space size 4 = {1,2,3,4} corresponds to { 'preflop', 'flop', 'turn', 'river' }
         # there are also 'showdown' & 'finished' but declare_action will not get call during those
         progress = self.current_street
