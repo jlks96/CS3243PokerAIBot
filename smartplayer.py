@@ -70,9 +70,8 @@ class SmartPlayer(BasePokerPlayer):
         # progress, input space size 4 = {1,2,3,4} corresponds to { 'preflop', 'flop', 'turn', 'river' }
         # there are also 'showdown' & 'finished' but declare_action will not get call during those
         progress = self.current_street
-        
-        # TODO: which EHS function to call ??
-        
+
+        ehs = self.EHS(hole_card, round_state['community_card'])
 
         #----------PREDICT ACTION---------#
         state = array([0, 0, 0, 0, 0])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
