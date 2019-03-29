@@ -74,7 +74,7 @@ class SmartPlayer(BasePokerPlayer):
         ehs = self.EHS(hole_card, round_state['community_card'])
 
         #----------PREDICT ACTION---------#
-        state = array([0, 0, 0, 0, 0])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
+        state = array([ehs, opp_class, pot, stack, progress])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
         state = np.reshape(state, [1, self.state_size])
         # map actions to indices, 0 - fold, 1 - call, 2 - raise
         action_index = self.predict_action(state)
@@ -148,7 +148,8 @@ class SmartPlayer(BasePokerPlayer):
     def _remember_examples(self):
         for i in range(len(self.actions)-1):
             self.memory.append((self.states[i], self.actions[i], self.in_game_reward, self.states[i + 1], 0))
-        self.memory.append((self.states[len(self.actions)-1], self.actions[len(self.actions)-1],
+        if len(self.actions) > 0:
+            self.memory.append((self.states[len(self.actions)-1], self.actions[len(self.actions)-1],
                             self.final_reward, self.states[len(self.actions)-1], 1))
         self.states = []  # reset for next round
         self.actions = []
@@ -201,6 +202,7 @@ class SmartPlayer(BasePokerPlayer):
           yield tuple(pool[i] for i in indices)
 
     def EHS_0(self, hole_card):
+        # print 'community card: 0'
         card1 = hole_card[0]
         card2 = hole_card[1]
         suited = card1[0] == card2[0]
@@ -208,8 +210,9 @@ class SmartPlayer(BasePokerPlayer):
         return probability/100
 
     def EHS_3_4(self, hole_card, community_card):
+        # print 'community card: 3-4'
         p_win = 0
-        for iter in range(1000):
+        for iter in range(500):
             community_card_new, opp_hole_card_new = self.generate_cards(hole_card, community_card)
             hole_card_new = [Card.from_str(card) for card in hole_card]
             p_score = HandEvaluator.eval_hand(hole_card_new, community_card_new)
@@ -218,6 +221,7 @@ class SmartPlayer(BasePokerPlayer):
         return p_win/1000
 
     def EHS_5(self, hole_card, community_card):
+        # print 'community card: 5'
         opp_possible_hole_cards = self.get_all_possible_opp_hole(hole_card, community_card)
         p_win = 0
         hole_card_new = [Card.from_str(card) for card in hole_card]
