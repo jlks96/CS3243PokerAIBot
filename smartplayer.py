@@ -74,7 +74,7 @@ class SmartPlayer(BasePokerPlayer):
         ehs = self.EHS(hole_card, round_state['community_card'])
 
         #----------PREDICT ACTION---------#
-        state = array([0, 0, 0, 0, 0])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
+        state = array([ehs, opp_class, pot, stack, progress])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
         state = np.reshape(state, [1, self.state_size])
         # map actions to indices, 0 - fold, 1 - call, 2 - raise
         action_index = self.predict_action(state)
@@ -148,7 +148,8 @@ class SmartPlayer(BasePokerPlayer):
     def _remember_examples(self):
         for i in range(len(self.actions)-1):
             self.memory.append((self.states[i], self.actions[i], self.in_game_reward, self.states[i + 1], 0))
-        self.memory.append((self.states[len(self.actions)-1], self.actions[len(self.actions)-1],
+        if len(self.actions) > 0:
+            self.memory.append((self.states[len(self.actions)-1], self.actions[len(self.actions)-1],
                             self.final_reward, self.states[len(self.actions)-1], 1))
         self.states = []  # reset for next round
         self.actions = []
