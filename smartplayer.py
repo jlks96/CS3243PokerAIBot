@@ -67,6 +67,7 @@ class SmartPlayer(BasePokerPlayer):
         pot = self.get_pot(round_state)
         # our current stack, input space = int 0 < x <= 1000
         stack = self.get_stack(round_state)
+        gain_ratio = (self.beginning_stack - stack) / float(pot)
         # progress, input space size 4 = {1,2,3,4} corresponds to { 'preflop', 'flop', 'turn', 'river' }
         # there are also 'showdown' & 'finished' but declare_action will not get call during those
         progress = self.current_street
@@ -74,7 +75,7 @@ class SmartPlayer(BasePokerPlayer):
         ehs = self.EHS(hole_card, round_state['community_card'])
 
         #----------PREDICT ACTION---------#
-        state = array([ehs, opp_class, pot, stack, progress])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
+        state = array([ehs, opp_class, gain_ratio, stack, progress])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
         state = np.reshape(state, [1, self.state_size])
         # map actions to indices, 0 - fold, 1 - call, 2 - raise
         action_index = self.predict_action(state)
@@ -212,7 +213,7 @@ class SmartPlayer(BasePokerPlayer):
     def EHS_3_4(self, hole_card, community_card):
         # print 'community card: 3-4'
         p_win = 0
-        for iter in range(500):
+        for iter in range(1000):
             community_card_new, opp_hole_card_new = self.generate_cards(hole_card, community_card)
             hole_card_new = [Card.from_str(card) for card in hole_card]
             p_score = HandEvaluator.eval_hand(hole_card_new, community_card_new)
