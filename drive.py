@@ -1,5 +1,6 @@
 import sys
 import getopt
+import time
 
 from pypokerengine.api.game import setup_config, start_poker
 from smartplayer import SmartPlayer
@@ -7,10 +8,10 @@ from randomplayer import RandomPlayer
 
 # Default option
 num_game = 5000
-num_round = 250
+num_round = 500
 initial_stack = 10000
 
-small_blind = 10
+small_blind = 20
 
 def usage():
 	print "usage: " + sys.argv[0] + " -n no_of_games -r max_rounds -i initial_stack -s small_blind_amount"
@@ -19,9 +20,12 @@ def usage():
 def initiate_game(config):
 	# Init pot of players
 	win_cnt = 0
-	for game in range(1, 101):
+	for game in range(1, 2):
 		print "Game number: %d" % (game)
+		start = time.time()
 		game_result = start_poker(config, verbose = 0)
+		end = time.time()
+		print "Time take to play: %.4f seconds" % (end-start)
 		agent1_pot = game_result['players'][0]['stack']
 		agent2_pot = game_result['players'][1]['stack']
 		print 'Player 1 pot: %d' %  (agent1_pot)
@@ -63,13 +67,8 @@ randomPlayer = RandomPlayer()
 config = set_config(smartPlayer, randomPlayer)
 print 'Start training with: \nNo. of games: %d\nMax rounds: %d\nInitial stack: %d\nSmall blind amount: %d' % (num_game, num_round, initial_stack, small_blind)
 
-for game_batch in range(0, num_game/50):
-	# Games are played in batch of 50
+for game_batch in range(0, num_game):
 	win_cnt = initiate_game(config)
-	if win_cnt >= 30:
-		newSmartPlayer = SmartPlayer()
-		newSmartPlayer.load("dqn_model.h5")
-		config = set_config(smartPlayer, newSmartPlayer)
 	smartPlayer.exp_replay()
 	smartPlayer.save("dqn_model.h5")
 	if game_batch > 0:
