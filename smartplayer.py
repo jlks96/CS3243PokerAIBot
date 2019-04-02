@@ -75,6 +75,7 @@ class SmartPlayer(BasePokerPlayer):
         ehs = self.EHS(hole_card, round_state['community_card'])
 
         #----------PREDICT ACTION---------#
+
         state = array([ehs, opp_class, gain_ratio, stack, progress])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
         state = np.reshape(state, [1, self.state_size])
         # map actions to indices, 0 - fold, 1 - call, 2 - raise
