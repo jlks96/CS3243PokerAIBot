@@ -240,7 +240,7 @@ class SmartPlayer(BasePokerPlayer):
         if len(community_card) == 3 or len(community_card) == 4:
             return self.EHS_3_4(hole_card, community_card)
         else:
-            return self.EHS_5(hole_card, community_card)
+            return self.EHS_3_4(hole_card, community_card)
 
     def generate_cards(self, hole_card, community_card):
         community_card_new = [card for card in community_card]
