@@ -43,13 +43,13 @@ class AveragePlayer(BasePokerPlayer):
 
   def EHS_3_4(self, hole_card, community_card):
     p_win = 0
-    for iter in range(100):
+    for iter in range(500):
       community_card_new, opp_hole_card_new = self.generate_cards(hole_card, community_card)
       hole_card_new = [Card.from_str(card) for card in hole_card]
       p_score = HandEvaluator.eval_hand(hole_card_new, community_card_new)
       o_score = HandEvaluator.eval_hand(opp_hole_card_new, community_card_new)
       p_win += int(p_score > o_score)
-    return p_win/1000
+    return p_win/500
   
   def EHS_5(self, hole_card, community_card):
     opp_possible_hole_cards = self.get_all_possible_opp_hole(hole_card, community_card)
