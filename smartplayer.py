@@ -12,6 +12,9 @@ from keras.optimizers import Adam
 from keras import backend as K
 import pprint
 
+checkpoint_path = "cp.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True, verbose=0)
 
 class SmartPlayer(BasePokerPlayer):
 
@@ -53,6 +56,7 @@ class SmartPlayer(BasePokerPlayer):
         self.opp_folded = 0 # games where opponent fold
         self.opp_raise = 0 # number of hands raised of opponent
         self.opp_call = 0
+        self.load()
 
     def declare_action(self, valid_actions, hole_card, round_state):
         #----------OPP CLASS----------#
@@ -175,11 +179,11 @@ class SmartPlayer(BasePokerPlayer):
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-    def load(self, name):
-        self.model.load_weights(name)
+	def load(self):
+		self.model.load_weights("training/cp.ckpt")
 
-    def save(self, name):
-        self.model.save_weights(name)
+	def save(self):
+		self.model.save_weights("training/model_weights.h5", overwrite=True)
 
     # -------------------EHS------------------ #
     '''POLYFILL FOR ITERTOOLS.COMBINATIONS'''
