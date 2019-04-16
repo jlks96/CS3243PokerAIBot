@@ -45,24 +45,23 @@ class SmartPlayer(BasePokerPlayer):
         self.first_action = True # of a new round, occur in preflop, to determine who's small_blind
         self.unanswered_raise = False # from opponent
         self.current_street = 0
-
         # opponents properties for classification (loose/tight, passive/aggressive)
         # loose if (round - folded)/round (GP%) >= 28%
         # passive if raise_count - call_count <= 0
         # 4 stages: preflop, flop, turn, river
-        self.opp_folded = 0 # games where opponent fold
-        self.opp_raise = 0 # number of hands raised of opponent
+        self.opp_folded = 0  # games where opponent fold
+        self.opp_raise = 0  # number of hands raised of opponent
         self.opp_call = 0
 
     def declare_action(self, valid_actions, hole_card, round_state):
-        #----------OPP CLASS----------#
+        # ----------OPP CLASS---------- #
         if self.first_action: # our bot has 1st action (b4 receiving 1st game update) -> bot is small_blind
             self.small_blind = True
             self.uuid = round_state['action_histories']['preflop'][0]['uuid']
             self.first_action = False
 
         # input space size 4 = {1,2,3,4} corresponds to { tightness: True/False, 'aggressiveness' =  True/False }
-        opp_class = self.update_opponent_classifification()
+        opp_class = self.update_opponent_classification()
         # pot, input space = int 0 < x <= 1000
         pot = self.get_pot(round_state)
         # our current stack, input space = int 0 < x <= 1000
@@ -74,14 +73,17 @@ class SmartPlayer(BasePokerPlayer):
 
         ehs = self.EHS(hole_card, round_state['community_card'])
 
-        #----------PREDICT ACTION---------#
-
-        state = array([ehs, opp_class, gain_ratio, stack, progress])  # TODO: compute the state ie feature values (SOMEBODY DO THIS PLEASE)
+        # ----------PREDICT ACTION--------- #
+        state = array([ehs, opp_class, gain_ratio, stack, progress])
         state = np.reshape(state, [1, self.state_size])
         # map actions to indices, 0 - fold, 1 - call, 2 - raise
         action_index = self.predict_action(state)
-        if action_index == 2 and len(valid_actions) < 3:
+        if action_index == 2 and len(valid_actions) == 2:
             action_index = 1
+        if action_index == 2 and len(valid_actions) == 1:
+            action_index = 0
+        if action_index == 1 and len(valid_actions) == 1:
+            action_index = 0
         self.states.append(state)
         self.actions.append(action_index)
         if action_index == 0:
@@ -129,7 +131,7 @@ class SmartPlayer(BasePokerPlayer):
             self.final_reward = round_state['pot']['main']['amount']
         else:
             self.final_reward = self.final_stack - self.beginning_stack
-        # self._remember_examples()  # at the end of each round, record all the training examples
+        # self._remember_examples()  # at the end of each round, record all the training examples (turn on for training only)
 
     # -----------------DQN MODEL------------------ #
     def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
@@ -189,7 +191,7 @@ class SmartPlayer(BasePokerPlayer):
         pool = tuple(iterable)
         n = len(pool)
         if r > n:
-          return
+            return
         indices = list(range(r))
         yield tuple(pool[i] for i in indices)
         while True:
@@ -204,15 +206,13 @@ class SmartPlayer(BasePokerPlayer):
           yield tuple(pool[i] for i in indices)
 
     def EHS_0(self, hole_card):
-        # print 'community card: 0'
         card1 = hole_card[0]
         card2 = hole_card[1]
         suited = card1[0] == card2[0]
-        probability = self.hole_table.get((card1[1], card2[1], suited)) if self.hole_table.get((card1[1], card2[1], suited)) != None else self.hole_table.get((card2[1], card1[1], suited))
+        probability = self.hole_table.get((card1[1], card2[1], suited)) if self.hole_table.get((card1[1], card2[1], suited)) is not None else self.hole_table.get((card2[1], card1[1], suited))
         return probability/100
 
     def EHS_3_4(self, hole_card, community_card):
-        # print 'community card: 3-4'
         p_win = 0
         for iter in range(1000):
             community_card_new, opp_hole_card_new = self.generate_cards(hole_card, community_card)
@@ -223,7 +223,6 @@ class SmartPlayer(BasePokerPlayer):
         return p_win/1000
 
     def EHS_5(self, hole_card, community_card):
-        # print 'community card: 5'
         opp_possible_hole_cards = self.get_all_possible_opp_hole(hole_card, community_card)
         p_win = 0
         hole_card_new = [Card.from_str(card) for card in hole_card]
@@ -232,7 +231,7 @@ class SmartPlayer(BasePokerPlayer):
             p_score = HandEvaluator.eval_hand(hole_card_new, community_card_new)
             o_score = HandEvaluator.eval_hand(opp_hole_card, community_card_new)
             p_win += int(p_score > o_score)
-        return p_win/len(opp_possible_hole_cards) # SHOULD I DO LAPLACE TO PREVENT N/0 SITUATION?
+        return p_win/len(opp_possible_hole_cards)
 
     def EHS(self, hole_card, community_card):
         if len(community_card) == 0:
@@ -248,14 +247,14 @@ class SmartPlayer(BasePokerPlayer):
         hole_card_set = set([Card.from_str(card).to_id() for card in hole_card])
         community_card_set = set([Card.from_str(card).to_id() for card in community_card])
         revealed_set = hole_card_set.union(community_card_set)
-        cheat_deck = list(original_deck_set - revealed_set) # TO TEST!!!!
+        cheat_deck = list(original_deck_set - revealed_set)
         opp_hole_card = []
-        while(len(community_card_new) < 5):
+        while len(community_card_new) < 5:
             idx = rand.choice(cheat_deck)
             new_card = Card.from_id(idx).__str__()
             community_card_new.append(new_card)
             cheat_deck.remove(idx)
-        while(len(opp_hole_card) < 2):
+        while len(opp_hole_card) < 2:
             idx = rand.choice(cheat_deck)
             new_card = Card.from_id(idx).__str__()
             opp_hole_card.append(new_card)
@@ -269,22 +268,20 @@ class SmartPlayer(BasePokerPlayer):
         hole_card_set = set([Card.from_str(card).to_id() for card in hole_card])
         community_card_set = set([Card.from_str(card).to_id() for card in community_card])
         revealed_set = hole_card_set.union(community_card_set)
-        cheat_deck = list(original_deck_set - revealed_set) # TO TEST!!!!
-        opp_possible_hole_card_id= self.combinations(cheat_deck, 2)
+        cheat_deck = list(original_deck_set - revealed_set)
+        opp_possible_hole_card_id = self.combinations(cheat_deck, 2)
         opp_possible_hole_cards = [[Card.from_id(id_pair[0]), Card.from_id(id_pair[1])] for id_pair in opp_possible_hole_card_id]
         return opp_possible_hole_cards
 
     # -------------------OPP CLASSIFICATION------------------ #
-    def update_opponent_classifification(self):
+    def update_opponent_classification(self):
         tightness = True
         GP_percentage = (self.round - self.opp_folded) / float(self.round)
         if GP_percentage < 0.28:
             tightness = False
-
         aggressiveness = True
         if self.opp_raise - self.opp_call <= 0:
             aggressiveness = False
-
         if tightness and aggressiveness:
             return 4
         elif tightness and (not aggressiveness):
@@ -293,7 +290,6 @@ class SmartPlayer(BasePokerPlayer):
             return 2
         else:
             return 1
-
 
     def call_or_check(self):
         if self.unanswered_raise:
@@ -315,6 +311,7 @@ class SmartPlayer(BasePokerPlayer):
             return seats[0]['stack']
         else:
             return seats[1]['stack']
+
 
 def setup_ai():
     return SmartPlayer()
