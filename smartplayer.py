@@ -129,7 +129,7 @@ class SmartPlayer(BasePokerPlayer):
             self.final_reward = round_state['pot']['main']['amount']
         else:
             self.final_reward = self.final_stack - self.beginning_stack
-        self._remember_examples()  # at the end of each round, record all the training examples
+        # self._remember_examples()  # at the end of each round, record all the training examples
 
     # -----------------DQN MODEL------------------ #
     def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
