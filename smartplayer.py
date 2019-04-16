@@ -195,21 +195,21 @@ class SmartPlayer(BasePokerPlayer):
         indices = list(range(r))
         yield tuple(pool[i] for i in indices)
         while True:
-          for i in reversed(range(r)):
-              if indices[i] != i + n - r:
-                  break
-          else:
-              return
-          indices[i] += 1
-          for j in range(i+1, r):
-              indices[j] = indices[j-1] + 1
-          yield tuple(pool[i] for i in indices)
+            for i in reversed(range(r)):
+                if indices[i] != i + n - r:
+                    break
+            else:
+                return
+            indices[i] += 1
+            for j in range(i+1, r):
+                indices[j] = indices[j-1] + 1
+            yield tuple(pool[i] for i in indices)
 
     def EHS_0(self, hole_card):
         card1 = hole_card[0]
         card2 = hole_card[1]
         suited = card1[0] == card2[0]
-        probability = self.hole_table.get((card1[1], card2[1], suited)) if self.hole_table.get((card1[1], card2[1], suited)) is not None else self.hole_table.get((card2[1], card1[1], suited))
+        probability = self.hole_table.get((card1[1], card2[1], suited)) if self.hole_table.get((card1[1], card2[1], suited)) != None else self.hole_table.get((card2[1], card1[1], suited))
         return probability/100
 
     def EHS_3_4(self, hole_card, community_card):
